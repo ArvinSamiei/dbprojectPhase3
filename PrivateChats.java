@@ -1,23 +1,40 @@
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.transport.TransportClient;
+
 import javax.print.DocFlavor;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
 
+import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
+
 
 public class PrivateChats {
     DBConnection dbConnection = new DBConnection();
 
-    public void sendMessage(String sender, String receiver, String text) {
+    public void sendMessage(String sender, String receiver, String text, Client client, int pv_counter_id) {
         dbConnection.makeConnection();
         try {
+            String date = LocalDateTime.now().toString();
             PreparedStatement preparedStatement = dbConnection.connection.prepareStatement(" INSERT  INTO private_chats (sender,receiver,text,state,date)" +
                     "VALUES ((?),(?),(?),0,?)");
             preparedStatement.setString(1,sender);
             preparedStatement.setString(2,receiver);
             preparedStatement.setString(3,text);
-            preparedStatement.setString(4,LocalDateTime.now().toString());
+            preparedStatement.setString(4,date);
             preparedStatement.executeUpdate();
             dbConnection.connection.close();
+            IndexResponse response = client.prepareIndex("messages", "pv", Integer.toString(pv_counter_id++))
+                    .setSource(jsonBuilder()
+                            .startObject()
+                            .field("sender", sender)
+                            .field("receiver", receiver)
+                            .field("message", text)
+                            .field("date", date)
+                            .endObject()
+                    )
+                    .execute().actionGet();
 
         } catch (Exception e) {
             System.out.println(e);

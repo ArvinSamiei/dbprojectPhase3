@@ -3,12 +3,22 @@ import javafx.scene.Group;
 import java.sql.ResultSet;
 import java.util.Scanner;
 
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.client.action.admin.indices.create.CreateIndexRequestBuilder;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import static org.elasticsearch.common.xcontent.XContentFactory.*;
+
+
 
 public class Main  {
     private static boolean loggedIn = false;
     private static String userPhoneNumber ;
+    private static int pv_counter_id = 0;
 
     public static void main(String[] args) throws Exception{
+        Client client = new TransportClient().addTransportAddress(new InetSocketTransportAddress("localhost", 9200));
 
         while (true){
             System.out.println("enter a command");
@@ -122,7 +132,10 @@ public class Main  {
                 //System.out.println(receiver);
                 //System.out.println(messageText);
                 PrivateChats message = new PrivateChats();
-                message.sendMessage(userPhoneNumber,receiver,messageText);
+                message.sendMessage(userPhoneNumber,receiver,messageText, client, pv_counter_id);
+
+
+
 
             }
             else if(enteredCommand.startsWith("create_channel ")&&loggedIn){
@@ -331,6 +344,10 @@ public class Main  {
                 else {
                     System.out.println("no unread message");
                 }
+            }
+            else if(enteredCommand.startsWith(("search_all")) && loggedIn){
+                SearchAll searchAll = new SearchAll();
+                searchAll.
             }
         }
     }
