@@ -1,11 +1,7 @@
-import javafx.scene.Group;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.common.transport.TransportAddress;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
@@ -321,9 +317,12 @@ public class Main {
                 }
             } else if (enteredCommand.startsWith(("search_all")) && loggedIn) {
                 SearchAll searchAll = new SearchAll();
-                searchAll.search(enteredCommand.substring(11), userPhoneNumber, client);
+                searchAll.searchAll(enteredCommand.substring(11), userPhoneNumber, client);
+            } else if (enteredCommand.startsWith("search_chat") && loggedIn) {
+                SearchAll searchAll = new SearchAll();
+                searchAll.search_spec(enteredCommand.substring(24), userPhoneNumber, enteredCommand.substring(12, 23), client);
             }
-            
+
         }
     }
 }

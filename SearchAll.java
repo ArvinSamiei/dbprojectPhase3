@@ -10,7 +10,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 public class SearchAll {
-    public void search(String textToSearch, String sender, Client client) {
+    public void searchAll(String textToSearch, String sender, Client client) {
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("sender", sender))
                 .filter(QueryBuilders.termsQuery("message", textToSearch));
@@ -19,5 +19,16 @@ public class SearchAll {
             System.out.println(searchHitFields.getSourceAsString());
         }
 
+    }
+
+    public void search_spec(String textToSearch, String sender, String receiver, Client client){
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("sender", sender))
+                .filter(QueryBuilders.termsQuery("receiver", receiver))
+                .filter(QueryBuilders.termsQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch().setQuery(query).get();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            System.out.println(searchHitFields.getSourceAsString());
+        }
     }
 }
