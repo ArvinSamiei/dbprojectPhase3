@@ -9,12 +9,12 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
-public class SearchAll {
+public class Search {
     public void searchAll(String textToSearch, String sender, Client client) {
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("sender", sender))
                 .filter(QueryBuilders.termsQuery("message", textToSearch));
-        SearchResponse resp = client.prepareSearch().setQuery(query).get();
+        SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
         for (SearchHit searchHitFields : resp.getHits()) {
             System.out.println(searchHitFields.getSourceAsString());
         }
@@ -26,7 +26,18 @@ public class SearchAll {
                 .filter(QueryBuilders.termsQuery("sender", sender))
                 .filter(QueryBuilders.termsQuery("receiver", receiver))
                 .filter(QueryBuilders.termsQuery("message", textToSearch));
-        SearchResponse resp = client.prepareSearch().setQuery(query).get();
+        SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            System.out.println(searchHitFields.getSourceAsString());
+        }
+    }
+
+    public void search_group_by_sender(String id, String sender, String textToSearch, Client client){
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("id", id))
+                .filter(QueryBuilders.termsQuery("sender", sender))
+                .filter(QueryBuilders.termsQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch("messages2").setQuery(query).get();
         for (SearchHit searchHitFields : resp.getHits()) {
             System.out.println(searchHitFields.getSourceAsString());
         }

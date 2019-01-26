@@ -14,6 +14,7 @@ public class Main {
     private static boolean loggedIn = false;
     private static String userPhoneNumber;
     private static long pv_counter_id = 0;
+    private static long group_counter_id = 0;
 
     public static void main(String[] args) throws Exception {
 
@@ -27,7 +28,15 @@ public class Main {
         SearchHits hits = response.getHits();
         long hitsCount = hits.getTotalHits();
         pv_counter_id = hitsCount;
-        System.out.println(pv_counter_id);
+//        System.out.println(pv_counter_id);
+        response = client.prepareSearch("messages2")
+                .setTypes("group")
+                .setSize(0)
+                .get();
+        hits = response.getHits();
+        hitsCount = hits.getTotalHits();
+        group_counter_id = hitsCount;
+        System.out.println(group_counter_id);
         while (true) {
             System.out.println("enter a command");
             Scanner input = new Scanner(System.in);
@@ -130,7 +139,7 @@ public class Main {
                 //System.out.println(messageText);
                 PrivateChats message = new PrivateChats();
                 message.sendMessage(userPhoneNumber, receiver, messageText, client, pv_counter_id);
-
+                pv_counter_id++;
 
             } else if (enteredCommand.startsWith("create_channel ") && loggedIn) {
                 String channelID = enteredCommand.substring(15, enteredCommand.lastIndexOf(" "));
@@ -176,7 +185,8 @@ public class Main {
                 boolean isMember = member.isMember(id, userPhoneNumber);
                 if (isMember) {
                     GroupMessage sendMessage = new GroupMessage();
-                    sendMessage.sendMessage(id, userPhoneNumber, message);
+                    sendMessage.sendMessage(id, userPhoneNumber, message, client, group_counter_id);
+                    group_counter_id++;
 
                 } else {
                     System.out.println("access denied");
@@ -316,11 +326,26 @@ public class Main {
                     System.out.println("no unread message");
                 }
             } else if (enteredCommand.startsWith(("search_all")) && loggedIn) {
-                SearchAll searchAll = new SearchAll();
-                searchAll.searchAll(enteredCommand.substring(11), userPhoneNumber, client);
+                Search search = new Search();
+                search.searchAll(enteredCommand.substring(11), userPhoneNumber, client);
             } else if (enteredCommand.startsWith("search_chat") && loggedIn) {
-                SearchAll searchAll = new SearchAll();
-                searchAll.search_spec(enteredCommand.substring(24), userPhoneNumber, enteredCommand.substring(12, 23), client);
+                Search search = new Search();
+                search.search_spec(enteredCommand.substring(24), userPhoneNumber, enteredCommand.substring(12, 23), client);
+            } else if ((enteredCommand.startsWith("search_group_by_sender")) && loggedIn) {
+                String forID = enteredCommand.substring(23);
+                String id = forID.substring(0, forID.indexOf(" "));
+                String forPhone = forID.substring(forID.indexOf(" ") + 1);
+                String phone = forPhone.substring(0, forPhone.indexOf(" "));
+                String text = forPhone.substring(forPhone.indexOf(" ") + 1);
+                GroupMember member = new GroupMember();
+                boolean isMember = member.isMember(id, userPhoneNumber);
+                if (!isMember){
+                    System.out.println("access denied");
+                    continue;
+                }
+                Search search = new Search();
+                search.search_group_by_sender(id, phone, text, client);
+
             }
 
         }
