@@ -35,6 +35,7 @@ public class PrivateChats {
                             .endObject()
                     )
                     .execute().actionGet();
+            System.out.println("hi");
 
         } catch (Exception e) {
             System.out.println(e);

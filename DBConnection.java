@@ -8,8 +8,8 @@ public class DBConnection {
        try {
            Class.forName("com.mysql.jdbc.Driver");
             connection = DriverManager.getConnection(
-                   "jdbc:mysql://localhost:3306/database?autoReconnect=true&useSSL=false",
-                   "root","1135971374");
+                   "jdbc:mysql://localhost:3306/phase2?autoReconnect=true&useSSL=false",
+                   "Arvin","arvin");
 
        }catch (Exception e){
            System.out.println(e);
