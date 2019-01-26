@@ -1,21 +1,23 @@
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.search.SearchResponseSections;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.SearchHits;
 
 public class SearchAll {
     public void search(String textToSearch, String sender, Client client) {
-        SearchRequestBuilder srb1 = client
-                .prepareSearch().setQuery(QueryBuilders.matchQuery("sender", sender));
-        SearchRequestBuilder srb2 = client
-                .prepareSearch().setQuery(QueryBuilders.matchQuery("message", textToSearch));
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("sender", sender))
+                .filter(QueryBuilders.termsQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch().setQuery(query).get();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            System.out.println(searchHitFields.getSourceAsString());
+        }
 
-        MultiSearchResponse sr = client.prepareMultiSearch()
-                .add(srb1)
-                .add(srb2)
-                .get();
-        System.out.println(sr.toString());
     }
 }

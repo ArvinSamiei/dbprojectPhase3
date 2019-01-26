@@ -3,6 +3,7 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 
 import javax.print.DocFlavor;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDateTime;
@@ -13,10 +14,11 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 public class PrivateChats {
     DBConnection dbConnection = new DBConnection();
 
-    public void sendMessage(String sender, String receiver, String text, Client client, int pv_counter_id) {
+    public void sendMessage(String sender, String receiver, String text, Client client, long pv_counter_id) {
+        String date = LocalDateTime.now().toString();
         dbConnection.makeConnection();
         try {
-            String date = LocalDateTime.now().toString();
+
             PreparedStatement preparedStatement = dbConnection.connection.prepareStatement(" INSERT  INTO private_chats (sender,receiver,text,state,date)" +
                     "VALUES ((?),(?),(?),0,?)");
             preparedStatement.setString(1,sender);
@@ -25,22 +27,26 @@ public class PrivateChats {
             preparedStatement.setString(4,date);
             preparedStatement.executeUpdate();
             dbConnection.connection.close();
-            IndexResponse response = client.prepareIndex("messages", "pv", Integer.toString(pv_counter_id++))
-                    .setSource(jsonBuilder()
-                            .startObject()
-                            .field("sender", sender)
-                            .field("receiver", receiver)
-                            .field("message", text)
-                            .field("date", date)
-                            .endObject()
-                    )
-                    .execute().actionGet();
-            System.out.println("hi");
+            try {
+                IndexResponse response = client.prepareIndex("messages", "pv", Long.toString(++pv_counter_id))
+                        .setSource(jsonBuilder()
+                                .startObject()
+                                .field("sender", sender)
+                                .field("receiver", receiver)
+                                .field("message", text)
+                                .field("date", date)
+                                .endObject()
+                        )
+                        .execute().actionGet();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
         } catch (Exception e) {
             System.out.println(e);
 
         }
+
     }
     public ResultSet fetchMessages(String phoneNumber){
         dbConnection.makeConnection();

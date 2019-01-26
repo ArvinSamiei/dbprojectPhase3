@@ -1,9 +1,12 @@
 import javafx.scene.Group;
+import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
@@ -14,13 +17,21 @@ import java.util.Scanner;
 public class Main {
     private static boolean loggedIn = false;
     private static String userPhoneNumber;
-    private static int pv_counter_id = 0;
+    private static long pv_counter_id = 0;
 
     public static void main(String[] args) throws Exception {
 
         TransportClient client = new PreBuiltTransportClient(Settings.EMPTY)
                 .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+        SearchResponse response = client.prepareSearch("messages")
+                .setTypes("pv")
+                .setSize(0) // Don't return any documents, we don't need them.
+                .get();
 
+        SearchHits hits = response.getHits();
+        long hitsCount = hits.getTotalHits();
+        pv_counter_id = hitsCount;
+        System.out.println(pv_counter_id);
         while (true) {
             System.out.println("enter a command");
             Scanner input = new Scanner(System.in);
@@ -312,6 +323,7 @@ public class Main {
                 SearchAll searchAll = new SearchAll();
                 searchAll.search(enteredCommand.substring(11), userPhoneNumber, client);
             }
+            
         }
     }
 }
