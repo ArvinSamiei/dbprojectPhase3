@@ -15,6 +15,7 @@ public class Main {
     private static String userPhoneNumber;
     private static long pv_counter_id = 0;
     private static long group_counter_id = 0;
+    private static long channel_counter_id = 0;
 
     public static void main(String[] args) throws Exception {
 
@@ -36,7 +37,17 @@ public class Main {
         hits = response.getHits();
         hitsCount = hits.getTotalHits();
         group_counter_id = hitsCount;
-        System.out.println(group_counter_id);
+//        System.out.println(group_counter_id);
+
+        response = client.prepareSearch("messages3")
+                .setTypes("channel")
+                .setSize(0)
+                .get();
+        hits = response.getHits();
+        hitsCount = hits.getTotalHits();
+        channel_counter_id = hitsCount;
+        System.out.println(channel_counter_id);
+
         while (true) {
             System.out.println("enter a command");
             Scanner input = new Scanner(System.in);
@@ -160,7 +171,9 @@ public class Main {
                 if (isAdmin) {
                     //System.out.println("if ");
                     ChannelMessage cm = new ChannelMessage();
-                    cm.sendMessage(ID, messageText);
+                    cm.sendMessage(ID, messageText, client, channel_counter_id);
+                    channel_counter_id++;
+
 
                 } else {
                     System.out.println("Access denied");
@@ -346,6 +359,12 @@ public class Main {
                 Search search = new Search();
                 search.search_group_by_sender(id, phone, text, client);
 
+            }
+
+            else if (enteredCommand.startsWith("view_messages_by_date") && loggedIn){
+                String date = enteredCommand.substring(22);
+                Search search = new Search();
+                search.view_messages_by_date(userPhoneNumber, date, client);
             }
 
         }
