@@ -46,7 +46,6 @@ public class Main {
         hits = response.getHits();
         hitsCount = hits.getTotalHits();
         channel_counter_id = hitsCount;
-        System.out.println(channel_counter_id);
 
         while (true) {
             System.out.println("enter a command");
@@ -352,19 +351,25 @@ public class Main {
                 String text = forPhone.substring(forPhone.indexOf(" ") + 1);
                 GroupMember member = new GroupMember();
                 boolean isMember = member.isMember(id, userPhoneNumber);
-                if (!isMember){
+                if (!isMember) {
                     System.out.println("access denied");
                     continue;
                 }
                 Search search = new Search();
                 search.search_group_by_sender(id, phone, text, client);
 
-            }
-
-            else if (enteredCommand.startsWith("view_messages_by_date") && loggedIn){
+            } else if (enteredCommand.startsWith("view_messages_by_date ") && loggedIn) {
                 String date = enteredCommand.substring(22);
                 Search search = new Search();
                 search.view_messages_by_date(userPhoneNumber, date, client);
+            }
+            else if(enteredCommand.startsWith("view_messages_by_date_group") && loggedIn){
+                String usefulString = enteredCommand.substring(28);
+                int space = usefulString.indexOf(" ");
+                String id = usefulString.substring(0, space);
+                String date = usefulString.substring(space + 1);
+                Search search = new Search();
+                search.view_messages_by_date_group(id, date, client);
             }
 
         }

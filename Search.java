@@ -497,6 +497,43 @@ public class Search {
 
 
     public void view_messages_by_date_group(String groupID, String date, Client client){
-        
+        dbConnection.makeConnection();
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("id", groupID))
+                .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"));
+        SearchResponse resp = client.prepareSearch("messages2").setQuery(query).get();
+        ArrayList<String> ress = new ArrayList<String>();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+                System.out.printf("Sender:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 }
