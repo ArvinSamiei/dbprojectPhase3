@@ -371,6 +371,22 @@ public class Main {
                 Search search = new Search();
                 search.view_messages_by_date_group(id, date, client);
             }
+            else if (enteredCommand.startsWith("search_group ") && loggedIn){
+                String usefulString = enteredCommand.substring(13);
+                int space = usefulString.indexOf(" ");
+                String id = usefulString.substring(0, space);
+                String text = usefulString.substring(space + 1);
+                Search search = new Search();
+                search.search_group(id, text, client);
+            }
+            else if (enteredCommand.startsWith("search_channel ") && loggedIn){
+                String usefulString = enteredCommand.substring(15);
+                int space = usefulString.indexOf(" ");
+                String id = usefulString.substring(0, space);
+                String text = usefulString.substring(space + 1);
+                Search search = new Search();
+                search.search_channel(id, text, client);
+            }
 
         }
     }

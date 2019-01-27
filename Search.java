@@ -536,4 +536,75 @@ public class Search {
             System.out.println(e);
         }
     }
+
+    public void search_group(String groupID, String textToSearch, Client client){
+        dbConnection.makeConnection();
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("id", groupID))
+                .filter(QueryBuilders.termsQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch("messages2").setQuery(query).get();
+        ArrayList<String> ress = new ArrayList<String>();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+//            System.out.println();
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+                System.out.printf("Sender:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+    }
+
+    public void search_channel(String id, String textToSearch, Client client){
+        dbConnection.makeConnection();
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("id", id))
+                .filter(QueryBuilders.termsQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch("messages3").setQuery(query).get();
+
+        ArrayList<String> ress = new ArrayList<String>();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                System.out.printf("Time:\"%s %s\" Message:\"%s\"\n", time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 }
