@@ -4,7 +4,9 @@ import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchResponseSections;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.Operator;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -21,8 +23,8 @@ public class Search {
     public void searchAll(String textToSearch, String sender, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termsQuery("sender", sender))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .must(QueryBuilders.termsQuery("sender", sender))
+                .must(QueryBuilders.matchPhraseQuery("message", textToSearch));
         SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
         ArrayList<String> ress = new ArrayList<String>();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -76,7 +78,7 @@ public class Search {
 
         query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("receiver", sender))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .must(QueryBuilders.matchPhraseQuery("message", textToSearch));
         resp = client.prepareSearch("messages").setQuery(query).get();
         ress.clear();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -131,12 +133,11 @@ public class Search {
     }
 
 
-
     public void searchAllFuzzy(String textToSearch, String sender, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termsQuery("sender", sender))
-                .filter(QueryBuilders.fuzzyQuery("message", textToSearch));
+                .must(QueryBuilders.termsQuery("sender", sender))
+                .should(QueryBuilders.matchQuery("message", textToSearch).fuzziness(Fuzziness.AUTO).operator(Operator.AND));
         SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
         ArrayList<String> ress = new ArrayList<String>();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -189,8 +190,8 @@ public class Search {
         }
 
         query = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termsQuery("receiver", sender))
-                .filter(QueryBuilders.fuzzyQuery("message", textToSearch));
+                .must(QueryBuilders.termsQuery("receiver", sender))
+                .should(QueryBuilders.matchQuery("message", textToSearch).fuzziness(Fuzziness.AUTO).operator(Operator.AND));
         resp = client.prepareSearch("messages").setQuery(query).get();
         ress.clear();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -249,7 +250,7 @@ public class Search {
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("sender", sender))
                 .filter(QueryBuilders.termsQuery("receiver", receiver))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .filter(QueryBuilders.matchPhraseQuery("message", textToSearch));
         SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
         ArrayList<String> ress = new ArrayList<String>();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -303,7 +304,7 @@ public class Search {
         query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("sender", receiver))
                 .filter(QueryBuilders.termsQuery("receiver", sender))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .filter(QueryBuilders.matchPhraseQuery("message", textToSearch));
         resp = client.prepareSearch("messages").setQuery(query).get();
         ress.clear();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -362,7 +363,7 @@ public class Search {
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("id", id))
                 .filter(QueryBuilders.termsQuery("sender", sender))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .filter(QueryBuilders.matchPhraseQuery("message", textToSearch));
         SearchResponse resp = client.prepareSearch("messages2").setQuery(query).get();
         for (SearchHit searchHitFields : resp.getHits()) {
             ress.add(searchHitFields.getSourceAsString());
@@ -610,7 +611,7 @@ public class Search {
     }
 
 
-    public void view_messages_by_date_group(String groupID, String date, Client client){
+    public void view_messages_by_date_group(String groupID, String date, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("id", groupID))
@@ -651,11 +652,11 @@ public class Search {
         }
     }
 
-    public void search_group(String groupID, String textToSearch, Client client){
+    public void search_group(String groupID, String textToSearch, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("id", groupID))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .filter(QueryBuilders.matchPhraseQuery("message", textToSearch));
         SearchResponse resp = client.prepareSearch("messages2").setQuery(query).get();
         ArrayList<String> ress = new ArrayList<String>();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -694,11 +695,11 @@ public class Search {
 
     }
 
-    public void search_channel(String id, String textToSearch, Client client){
+    public void search_channel(String id, String textToSearch, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("id", id))
-                .filter(QueryBuilders.termsQuery("message", textToSearch));
+                .filter(QueryBuilders.matchPhraseQuery("message", textToSearch));
         SearchResponse resp = client.prepareSearch("messages3").setQuery(query).get();
 
         ArrayList<String> ress = new ArrayList<String>();
@@ -722,7 +723,7 @@ public class Search {
         }
     }
 
-    public void view_messages_by_date_chat(String user, String id, String date, Client client){
+    public void view_messages_by_date_chat(String user, String id, String date, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"))
@@ -835,12 +836,11 @@ public class Search {
         }
     }
 
-    public void view_messages_by_date_channel(String id, String date, Client client){
+    public void view_messages_by_date_channel(String id, String date, Client client) {
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termsQuery("id", id))
                 .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"));
         SearchResponse resp = client.prepareSearch("messages3").setQuery(query).get();
-
         ArrayList<String> ress = new ArrayList<>();
         for (SearchHit searchHitFields : resp.getHits()) {
             ress.add(searchHitFields.getSourceAsString());
