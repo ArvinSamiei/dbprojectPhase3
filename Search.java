@@ -130,6 +130,120 @@ public class Search {
 
     }
 
+
+
+    public void searchAllFuzzy(String textToSearch, String sender, Client client) {
+        dbConnection.makeConnection();
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("sender", sender))
+                .filter(QueryBuilders.fuzzyQuery("message", textToSearch));
+        SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
+        ArrayList<String> ress = new ArrayList<String>();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int receiverInd = s.indexOf("receiver");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, receiverInd - 3);
+                String receiverID = s.substring(receiverInd + 11, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+
+                PreparedStatement receiverName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                receiverName.setString(1, receiverID);
+                resultset = null;
+                resultset = receiverName.executeQuery();
+                String nameOfReceiver = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfReceiver = resultset.getString("name");
+                }
+
+                if (nameOfReceiver == null) {
+                    nameOfReceiver = receiverID;
+                }
+
+                System.out.printf("Sender:%s Receiver:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, nameOfReceiver, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("receiver", sender))
+                .filter(QueryBuilders.fuzzyQuery("message", textToSearch));
+        resp = client.prepareSearch("messages").setQuery(query).get();
+        ress.clear();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int receiverInd = s.indexOf("receiver");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, receiverInd - 3);
+                String receiverID = s.substring(receiverInd + 11, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+
+                PreparedStatement receiverName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                receiverName.setString(1, receiverID);
+                resultset = null;
+                resultset = receiverName.executeQuery();
+                String nameOfReceiver = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfReceiver = resultset.getString("name");
+                }
+
+                if (nameOfReceiver == null) {
+                    nameOfReceiver = receiverID;
+                }
+
+                System.out.printf("Sender:%s Receiver:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, nameOfReceiver, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+    }
+
     public void search_spec(String textToSearch, String sender, String receiver, Client client) {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
@@ -588,6 +702,146 @@ public class Search {
         SearchResponse resp = client.prepareSearch("messages3").setQuery(query).get();
 
         ArrayList<String> ress = new ArrayList<String>();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                System.out.printf("Time:\"%s %s\" Message:\"%s\"\n", time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+
+    public void view_messages_by_date_chat(String user, String id, String date, Client client){
+        dbConnection.makeConnection();
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"))
+                .filter(QueryBuilders.termsQuery("receiver", user))
+                .filter(QueryBuilders.termsQuery("sender", id));
+        SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
+        ArrayList<String> ress = new ArrayList<String>();
+        ress.clear();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int receiverInd = s.indexOf("receiver");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, receiverInd - 3);
+                String receiverID = s.substring(receiverInd + 11, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+
+                PreparedStatement receiverName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                receiverName.setString(1, receiverID);
+                resultset = null;
+                resultset = receiverName.executeQuery();
+                String nameOfReceiver = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfReceiver = resultset.getString("name");
+                }
+
+                if (nameOfReceiver == null) {
+                    nameOfReceiver = receiverID;
+                }
+
+                System.out.printf("Sender:%s Receiver:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, nameOfReceiver, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"))
+                .filter(QueryBuilders.termsQuery("sender", user))
+                .filter(QueryBuilders.termsQuery("receiver", id));
+        resp = client.prepareSearch("messages").setQuery(query).get();
+        ress.clear();
+        for (SearchHit searchHitFields : resp.getHits()) {
+            ress.add(searchHitFields.getSourceAsString());
+        }
+
+        try {
+            for (String s : ress) {
+                int senderInd = s.indexOf("sender");
+                int receiverInd = s.indexOf("receiver");
+                int messageInd = s.indexOf("message");
+                int dateInd = s.indexOf("date");
+                String senderID = s.substring(senderInd + 9, receiverInd - 3);
+                String receiverID = s.substring(receiverInd + 11, messageInd - 3);
+                String messageOfSender = s.substring(messageInd + 10, dateInd - 3);
+                String time = s.substring(dateInd + 7, dateInd + 17);
+                String clock = s.substring(dateInd + 18, dateInd + 26);
+                PreparedStatement senderName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                senderName.setString(1, senderID);
+                ResultSet resultset = null;
+                resultset = senderName.executeQuery();
+                String nameOfSender = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfSender = resultset.getString("name");
+                }
+
+                if (nameOfSender == null) {
+                    nameOfSender = senderID;
+                }
+
+                PreparedStatement receiverName = dbConnection.connection.prepareStatement("select name from user where user_id=(?)");
+                receiverName.setString(1, receiverID);
+                resultset = null;
+                resultset = receiverName.executeQuery();
+                String nameOfReceiver = null;
+                while (resultset != null && resultset.next()) {
+                    nameOfReceiver = resultset.getString("name");
+                }
+
+                if (nameOfReceiver == null) {
+                    nameOfReceiver = receiverID;
+                }
+
+                System.out.printf("Sender:%s Receiver:%s Time:\"%s %s\" Message:\"%s\"\n", nameOfSender, nameOfReceiver, time, clock, messageOfSender);
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void view_messages_by_date_channel(String id, String date, Client client){
+        BoolQueryBuilder query = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termsQuery("id", id))
+                .filter(QueryBuilders.rangeQuery("date").gte(date + "T" + "00:00:00.000").lte(date + "T" + "23:59:59.999"));
+        SearchResponse resp = client.prepareSearch("messages3").setQuery(query).get();
+
+        ArrayList<String> ress = new ArrayList<>();
         for (SearchHit searchHitFields : resp.getHits()) {
             ress.add(searchHitFields.getSourceAsString());
         }

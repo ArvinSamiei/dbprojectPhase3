@@ -361,6 +361,7 @@ public class Main {
             } else if (enteredCommand.startsWith("view_messages_by_date ") && loggedIn) {
                 String date = enteredCommand.substring(22);
                 Search search = new Search();
+                date = date.replace('/', '-');
                 search.view_messages_by_date(userPhoneNumber, date, client);
             }
             else if(enteredCommand.startsWith("view_messages_by_date_group") && loggedIn){
@@ -368,6 +369,7 @@ public class Main {
                 int space = usefulString.indexOf(" ");
                 String id = usefulString.substring(0, space);
                 String date = usefulString.substring(space + 1);
+                date = date.replace('/', '-');
                 Search search = new Search();
                 search.view_messages_by_date_group(id, date, client);
             }
@@ -386,6 +388,30 @@ public class Main {
                 String text = usefulString.substring(space + 1);
                 Search search = new Search();
                 search.search_channel(id, text, client);
+            }
+            else if (enteredCommand.startsWith("search_all_fuzzy") && loggedIn){
+                Search search = new Search();
+                search.searchAllFuzzy(enteredCommand.substring(17), userPhoneNumber, client);
+            }
+            else if (enteredCommand.startsWith("view_messages_by_date_chat")){
+                int space = enteredCommand.indexOf(" ");
+                String usefulCommand = enteredCommand.substring(space + 1);
+                space = usefulCommand.indexOf(" ");
+                String phoneID = usefulCommand.substring(0, space);
+                String dateTemp = usefulCommand.substring(space + 1);
+                String date = dateTemp.replace('/', '-');
+                Search search = new Search();
+                search.view_messages_by_date_chat(userPhoneNumber, phoneID, date, client);
+            }
+            else if (enteredCommand.startsWith("view_messages_by_date_channel") && loggedIn){
+                int space = enteredCommand.indexOf(" ");
+                String usefulCommand = enteredCommand.substring(space + 1);
+                space = usefulCommand.indexOf(" ");
+                String id = usefulCommand.substring(0, space);
+                String dateTemp = usefulCommand.substring(space + 1);
+                String date = dateTemp.replace('/', '-');
+                Search search = new Search();
+                search.view_messages_by_date_channel(id, date, client);
             }
 
         }
