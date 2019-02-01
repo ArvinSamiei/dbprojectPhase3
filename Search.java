@@ -137,7 +137,7 @@ public class Search {
         dbConnection.makeConnection();
         BoolQueryBuilder query = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termsQuery("sender", sender))
-                .should(QueryBuilders.multiMatchQuery(textToSearch, "message").fuzziness("AUTO").operator(Operator.AND));
+                .must(QueryBuilders.matchQuery("message", textToSearch).fuzziness(Fuzziness.AUTO));
         SearchResponse resp = client.prepareSearch("messages").setQuery(query).get();
         ArrayList<String> ress = new ArrayList<String>();
         for (SearchHit searchHitFields : resp.getHits()) {
@@ -191,7 +191,7 @@ public class Search {
 
         query = QueryBuilders.boolQuery()
                 .must(QueryBuilders.termsQuery("receiver", sender))
-                .should(QueryBuilders.multiMatchQuery(textToSearch, "message").fuzziness("AUTO").operator(Operator.AND));
+                .must(QueryBuilders.matchQuery("message", textToSearch).fuzziness(Fuzziness.AUTO));
         resp = client.prepareSearch("messages").setQuery(query).get();
         ress.clear();
         for (SearchHit searchHitFields : resp.getHits()) {
